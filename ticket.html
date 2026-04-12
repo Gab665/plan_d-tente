@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ticket Électronique - MomentDétente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #0d47a1;
+            --accent-color: #ff6f00;
+            --dark-color: #1a1a2e;
+            --success-color: #2e7d32;
+        }
+        body { font-family: 'Georgia', serif; background: #eef2ff; color: #333; min-height: 100vh; }
+        .container { width: 100%; max-width: 900px; margin: 0 auto; padding: 0 15px; }
+
+        /* ===== HEADER ===== */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white; padding: 15px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; font-size: 22px; font-weight: bold; text-decoration: none; color: white; }
+        .logo i { margin-right: 8px; color: var(--accent-color); font-size: 26px; }
+        .logo span { color: var(--accent-color); }
+        .btn-back {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.15); color: white;
+            padding: 8px 20px; border-radius: 50px; text-decoration: none;
+            font-size: 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.3s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.25); }
+
+        /* ===== PAGE PRINCIPALE ===== */
+        .ticket-page { padding: 40px 0 60px; }
+        .page-title {
+            text-align: center; margin-bottom: 30px;
+            animation: fadeUp 0.5s ease;
+        }
+        .page-title h1 { color: var(--primary-color); font-size: 26px; margin-bottom: 6px; }
+        .page-title p { color: #666; font-size: 14px; }
+        @keyframes fadeUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* ===== QR TICKET ===== */
+        .qr-ticket {
+            background: white; border-radius: 25px; padding: 30px;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.15);
+            border-top: 10px solid var(--accent-color);
+            position: relative; overflow: hidden;
+            animation: fadeUp 0.6s ease;
+        }
+        .qr-ticket::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 12px;
+            background: linear-gradient(90deg, #1a237e, #ff6f00, #1a237e);
+        }
+
+        /* En-tête du ticket */
+        .qr-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 25px; padding-bottom: 15px; border-bottom: 3px dashed #e0e0e0;
+        }
+        .qr-logo { display: flex; align-items: center; font-size: 26px; font-weight: bold; color: var(--primary-color); }
+        .qr-logo i { color: var(--accent-color); margin-right: 10px; font-size: 32px; }
+        .qr-title {
+            font-size: 15px; color: var(--primary-color); background: #fff3e0;
+            padding: 8px 18px; border-radius: 30px; font-weight: 700;
+            border: 2px solid var(--accent-color);
+        }
+
+        /* Corps du ticket : QR à gauche, infos à droite */
+        .qr-main { display: flex; flex-wrap: wrap; gap: 28px; margin-bottom: 20px; }
+
+        .qr-left {
+            flex: 0 0 210px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            background: #f5f5f5; padding: 20px; border-radius: 20px;
+            border: 3px solid var(--primary-color);
+        }
+        .qr-code-box {
+            background: white; padding: 14px; border-radius: 14px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.12); margin-bottom: 14px;
+            border: 3px solid var(--accent-color);
+            display: flex; justify-content: center; align-items: center;
+            width: 200px; height: 200px;
+        }
+        .qr-code-box canvas, .qr-code-box img { width: 170px !important; height: 170px !important; display: block; }
+        .qr-scan-text {
+            font-size: 13px; color: var(--primary-color); font-weight: 700;
+            background: white; padding: 7px 14px; border-radius: 30px;
+            border: 2px solid var(--accent-color); text-align: center;
+        }
+
+        .qr-right { flex: 1; min-width: 280px; }
+
+        /* Blocs d'informations */
+        .info-block {
+            background: #f8f9fa; padding: 18px; border-radius: 15px;
+            margin-bottom: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        }
+        .info-block.green-block { border-left: 8px solid var(--success-color); }
+        .info-block.red-block   { border-left: 8px solid #d32f2f; }
+        .info-title {
+            font-size: 17px; font-weight: 800; margin-bottom: 14px;
+            display: flex; align-items: center; gap: 10px;
+            padding-bottom: 10px; border-bottom: 2px solid #e0e0e0;
+        }
+        .info-title.green { color: var(--success-color); }
+        .info-title.red   { color: #d32f2f; }
+
+        .unique-code {
+            background: #e8f5e9; padding: 14px; border-radius: 12px; margin-bottom: 16px;
+            font-family: 'Courier New', monospace; font-size: 19px; font-weight: 800;
+            color: var(--success-color); text-align: center; letter-spacing: 3px;
+            border: 2px solid #a5d6a7; word-break: break-word;
+        }
+
+        .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .info-item { background: white; padding: 10px 12px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .info-label { font-weight: 700; color: #666; display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .info-value { font-weight: 800; color: var(--dark-color); font-size: 15px; word-break: break-word; }
+        .amount-value { color: #1976d2 !important; font-size: 18px !important; }
+
+        /* Pied du ticket */
+        .ticket-footer {
+            margin-top: 22px; padding-top: 18px; border-top: 3px dashed #e0e0e0;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 13px; color: #777;
+        }
+        .ticket-validation { display: flex; align-items: center; gap: 8px; color: var(--success-color); font-weight: 700; }
+
+        /* ===== BOUTONS D'ACTIONS ===== */
+        .action-buttons { display: flex; gap: 14px; margin: 28px 0 10px; flex-wrap: wrap; }
+        .btn-action {
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            color: white; border: none; padding: 14px 22px; border-radius: 50px;
+            font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+            flex: 1; text-decoration: none; box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+        }
+        .btn-action:hover { transform: translateY(-3px); box-shadow: 0 10px 22px rgba(0,0,0,0.2); }
+        .btn-pdf       { background: linear-gradient(135deg, #c62828, #e53935); }
+        .btn-whatsapp  { background: linear-gradient(135deg, #1b5e20, #43a047); }
+        .btn-print-act { background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--dark-color); color: white;
+            padding: 22px 0; text-align: center; margin-top: 20px;
+        }
+        footer p { color: #aaa; font-size: 13px; margin-bottom: 3px; }
+        footer strong { color: var(--accent-color); }
+
+        /* ===== IMPRESSION ===== */
+        @media print {
+            header, footer, .action-buttons, .page-title { display: none !important; }
+            body { background: white !important; }
+            .ticket-page { padding: 0 !important; }
+            .qr-ticket { box-shadow: none !important; border-radius: 0 !important; }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 680px) {
+            .qr-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .qr-main   { flex-direction: column; }
+            .qr-left   { width: 100%; max-width: 270px; margin: 0 auto; }
+            .info-grid { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction: column; }
+            .unique-code { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-landmark"></i>
+                    <span>Moment</span>Détente
+                </a>
+                <a href="confirmation.html" class="btn-back">
+                    <i class="fas fa-arrow-left"></i> Retour
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <section class="ticket-page">
+        <div class="container">
+
+            <div class="page-title">
+                <h1><i class="fas fa-qrcode" style="color: var(--accent-color);"></i> Ticket Électronique</h1>
+                <p>Scannez le QR code pour accéder à vos informations · Téléchargez ou imprimez ce ticket</p>
+            </div>
+
+            <!-- ===== QR TICKET ===== -->
+            <div id="qrTicket" class="qr-ticket">
+
+                <div class="qr-header">
+                    <div class="qr-logo">
+                        <i class="fas fa-landmark"></i>
+                        <span>MomentDétente</span>
+                    </div>
+                    <div class="qr-title">
+                        <i class="fas fa-qrcode"></i> TICKET ÉLECTRONIQUE
+                    </div>
+                </div>
+
+                <div class="qr-main">
+                    <!-- QR Code -->
+                    <div class="qr-left">
+                        <div id="qrcode" class="qr-code-box"></div>
+                        <div class="qr-scan-text"><i class="fas fa-camera"></i> SCANNEZ VOS INFOS</div>
+                    </div>
+
+                    <!-- Informations -->
+                    <div class="qr-right">
+                        <!-- Bloc identité -->
+                        <div class="info-block green-block">
+                            <div class="info-title green">
+                                <i class="fas fa-id-card"></i> VOS INFORMATIONS
+                            </div>
+                            <div class="unique-code" id="qrUniqueCode">MOMENT DÉTENTE</div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">NOM</span>
+                                    <span class="info-value" id="qrNom">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">PRÉNOMS</span>
+                                    <span class="info-value" id="qrPrenoms">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">TÉLÉPHONE</span>
+                                    <span class="info-value" id="qrPhone">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">EMAIL</span>
+                                    <span class="info-value" id="qrEmail">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">VILLE</span>
+                                    <span class="info-value" id="qrVille">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">QUARTIER</span>
+                                    <span class="info-value" id="qrQuartier">—</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bloc réservation -->
+                        <div class="info-block red-block">
+                            <div class="info-title red">
+                                <i class="fas fa-ticket-alt"></i> DÉTAILS RÉSERVATION
+                            </div>
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">HEURE</span>
+                                    <span class="info-value" id="qrHeure">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">DATE VISITE</span>
+                                    <span class="info-value" id="qrDateVisite">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">CODE</span>
+                                    <span class="info-value" id="qrCodeTicket">—</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">MONTANT</span>
+                                    <span class="info-value amount-value" id="qrMontant">—</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ticket-footer">
+                    <div class="ticket-validation">
+                        <i class="fas fa-check-circle"></i> QR CODE OFFICIEL
+                    </div>
+                    <div><i class="fas fa-qrcode"></i> Scannez pour vos infos</div>
+                </div>
+
+            </div>
+            <!-- /qrTicket -->
+
+            <!-- Boutons d'actions -->
+            <div class="action-buttons">
+                <button id="downloadPdfBtn" class="btn-action btn-pdf">
+                    <i class="fas fa-file-pdf"></i> Télécharger PDF
+                </button>
+                <a id="whatsappQRLink" href="#" target="_blank" class="btn-action btn-whatsapp">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
+                <button id="printBtn" class="btn-action btn-print-act">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 <strong>Voyage Historique</strong>. Tous droits réservés.</p>
+            <p>Projet collaboratif : AMINOU Andil · INOUSSA Gabriel · MIGAN Issa · SOSSA Caleb</p>
+        </div>
+    </footer>
+
+    <script>
+        function getCurrentTime() {
+            var n = new Date();
+            return String(n.getHours()).padStart(2,'0') + ':'
+                 + String(n.getMinutes()).padStart(2,'0') + ':'
+                 + String(n.getSeconds()).padStart(2,'0');
+        }
+
+        window.addEventListener('DOMContentLoaded', function () {
+            /* Récupération des données de réservation */
+            var raw = sessionStorage.getItem('reservationData');
+            if (!raw) {
+                window.location.href = 'index.html';
+                return;
+            }
+            var data = JSON.parse(raw);
+
+            var uniqueCode  = 'MOMENT DÉTENTE';
+            var currentTime = getCurrentTime();
+
+            /* ── Génération du QR Code ── */
+            var qrUrl = 'https://gab665.github.io/Qr_Code/?' + new URLSearchParams({
+                nom:        data.nom,
+                prenoms:    data.prenoms,
+                telephone:  data.telephone,
+                email:      data.email,
+                ville:      data.villeEmbarquement,
+                quartier:   data.quartierResidentiel,
+                montant:    data.montant,
+                code:       data.code,
+                heure:      currentTime,
+                uniqueCode: uniqueCode
+            }).toString();
+
+            try {
+                new QRCode(document.getElementById('qrcode'), {
+                    text:         qrUrl,
+                    width:        170,
+                    height:       170,
+                    colorDark:    '#1a237e',
+                    colorLight:   '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } catch (e) {
+                document.getElementById('qrcode').innerHTML =
+                    '<p style="color:red;font-size:12px;">Erreur QR code</p>';
+            }
+
+            /* ── Remplissage des champs ── */
+            document.getElementById('qrUniqueCode').textContent = uniqueCode;
+            document.getElementById('qrNom').textContent        = data.nom;
+            document.getElementById('qrPrenoms').textContent    = data.prenoms;
+            document.getElementById('qrPhone').textContent      = data.telephone;
+            document.getElementById('qrEmail').textContent      = data.email;
+            document.getElementById('qrVille').textContent      = data.villeEmbarquement;
+            document.getElementById('qrQuartier').textContent   = data.quartierResidentiel;
+            document.getElementById('qrHeure').textContent      = currentTime;
+            document.getElementById('qrDateVisite').textContent = data.dateFormatee || data.dateVisite || '—';
+            document.getElementById('qrCodeTicket').textContent = data.code;
+            document.getElementById('qrMontant').textContent    = data.montant.toLocaleString('fr-FR') + ' FCFA';
+
+            /* ── Télécharger en PDF ── */
+            document.getElementById('downloadPdfBtn').addEventListener('click', function () {
+                var btn  = this;
+                var orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...';
+                btn.disabled  = true;
+
+                setTimeout(function () {
+                    html2canvas(document.getElementById('qrTicket'), {
+                        scale:           2,
+                        backgroundColor: '#ffffff',
+                        allowTaint:      true,
+                        useCORS:         true,
+                        logging:         false
+                    }).then(function (canvas) {
+                        var jsPDF  = window.jspdf.jsPDF;
+                        var pdf    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+                        var imgData = canvas.toDataURL('image/jpeg', 0.92);
+                        var pw     = pdf.internal.pageSize.getWidth();
+                        var ph     = pdf.internal.pageSize.getHeight();
+                        var ratio  = Math.min(pw / canvas.width, ph / canvas.height);
+                        var w      = canvas.width  * ratio;
+                        var h      = canvas.height * ratio;
+                        pdf.addImage(imgData, 'JPEG', (pw - w) / 2, (ph - h) / 2, w, h);
+                        pdf.save('MomentDetente-' + data.code + '.pdf');
+                        btn.innerHTML = orig;
+                        btn.disabled  = false;
+                    }).catch(function () {
+                        alert('Erreur lors de la génération du PDF.');
+                        btn.innerHTML = orig;
+                        btn.disabled  = false;
+                    });
+                }, 500);
+            });
+
+            /* ── Lien WhatsApp ── */
+            document.getElementById('whatsappQRLink').href =
+                'https://wa.me/22999910951?text=' +
+                encodeURIComponent('Bonjour, voici mon ticket électronique (Code: ' + data.code + ')');
+
+            /* ── Imprimer ── */
+            document.getElementById('printBtn').addEventListener('click', function () {
+                window.print();
+            });
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Réservation Confirmée - MomentDétente</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        :root {
+            --primary-color: #1a237e;
+            --secondary-color: #0d47a1;
+            --accent-color: #ff6f00;
+            --dark-color: #1a1a2e;
+            --success-color: #2e7d32;
+            --text-color: #333;
+        }
+        body {
+            font-family: 'Georgia', serif;
+            background-color: #f0f7ff;
+            color: var(--text-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--dark-color));
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        .container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 0 15px; }
+        .header-content { display: flex; justify-content: space-between; align-items: center; }
+        .logo { display: flex; align-items: center; font-size: 22px; font-weight: bold; text-decoration: none; color: white; }
+        .logo i { margin-right: 8px; color: var(--accent-color); font-size: 26px; }
+        .logo span { color: var(--accent-color); }
+        .btn-home {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,0.15); color: white;
+            padding: 8px 20px; border-radius: 50px; text-decoration: none;
+            font-size: 14px; font-weight: 600; border: 1px solid rgba(255,255,255,0.3);
+            transition: all 0.3s;
+        }
+        .btn-home:hover { background: rgba(255,255,255,0.25); }
+
+        /* ===== BANDEAU SUCCÈS ===== */
+        .success-banner {
+            background: linear-gradient(135deg, var(--success-color), #1b5e20);
+            color: white; text-align: center; padding: 20px;
+            animation: slideDown 0.5s ease;
+        }
+        @keyframes slideDown { from { transform: translateY(-30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .success-banner i { font-size: 24px; margin-right: 10px; }
+        .success-banner p { font-size: 18px; font-weight: 600; }
+
+        /* ===== SECTION TICKET ===== */
+        .ticket-section { padding: 50px 0 60px; }
+        .ticket-wrapper { max-width: 720px; margin: 0 auto; }
+
+        .ticket {
+            background: white;
+            border-radius: 20px;
+            padding: 35px 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+            border-top: 8px solid var(--accent-color);
+            animation: fadeUp 0.6s ease;
+        }
+        @keyframes fadeUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        .ticket-header { text-align: center; margin-bottom: 30px; }
+        .ticket-header .icon-check {
+            width: 70px; height: 70px; background: linear-gradient(135deg, var(--success-color), #4caf50);
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 15px; font-size: 30px; color: white;
+            box-shadow: 0 8px 20px rgba(46,125,50,0.3);
+        }
+        .ticket-header h2 { color: var(--success-color); font-size: 26px; margin-bottom: 6px; }
+        .ticket-header p { color: #777; font-size: 15px; }
+
+        /* Grille des infos */
+        .ticket-details {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 14px; margin-bottom: 25px;
+        }
+        .ticket-info {
+            background: #f8f9ff; padding: 14px 16px; border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+        .ticket-label { font-weight: 700; color: var(--primary-color); display: block; margin-bottom: 4px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .ticket-value { font-size: 15px; font-weight: 600; color: var(--text-color); word-break: break-word; }
+
+        /* Code de réservation */
+        .ticket-code-container {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white; padding: 22px; border-radius: 14px; text-align: center; margin: 25px 0;
+        }
+        .ticket-code-container p { margin-bottom: 8px; opacity: 0.85; font-size: 14px; }
+        .ticket-code {
+            font-family: 'Courier New', monospace; font-size: 26px; letter-spacing: 3px; font-weight: 800;
+            padding: 12px 20px; background: rgba(255,255,255,0.15); border-radius: 10px;
+            display: inline-block; border: 2px dashed rgba(255,255,255,0.4);
+        }
+        .ticket-code-container small { display: block; margin-top: 10px; opacity: 0.75; font-size: 13px; }
+
+        /* Instructions paiement */
+        .ticket-instructions {
+            background: #fff8e1; padding: 20px; border-radius: 12px;
+            border-left: 5px solid var(--accent-color); margin-top: 20px;
+        }
+        .ticket-instructions h4 { color: var(--primary-color); margin-bottom: 14px; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        .ticket-instructions p { margin-bottom: 8px; font-size: 14px; }
+        .ticket-instructions ul { margin: 8px 0 14px 22px; font-size: 14px; }
+        .ticket-instructions li { margin-bottom: 6px; }
+
+        /* Boutons */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+            padding: 13px 28px; border-radius: 50px; font-weight: 700; font-size: 15px;
+            text-decoration: none; border: none; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .btn-whatsapp { background: #25D366; color: white; width: 100%; margin-top: 12px; font-size: 16px; }
+        .btn-whatsapp:hover { background: #1ebe5d; }
+
+        .ticket-actions { display: flex; gap: 14px; margin-top: 28px; flex-wrap: wrap; }
+        .btn-print { background: var(--primary-color); color: white; flex: 1; }
+        .btn-new { background: var(--success-color); color: white; flex: 1; text-decoration: none; }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background-color: var(--dark-color); color: white;
+            padding: 25px 0; text-align: center; margin-top: 30px;
+        }
+        footer p { color: #aaa; font-size: 13px; margin-bottom: 4px; }
+        footer strong { color: var(--accent-color); }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .ticket { padding: 25px 18px; }
+            .ticket-details { grid-template-columns: 1fr; }
+            .ticket-actions { flex-direction: column; }
+            .ticket-code { font-size: 20px; word-break: break-all; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="index.html" class="logo">
+                    <i class="fas fa-landmark"></i>
+                    <span>Moment</span>Détente
+                </a>
+                <a href="index.html" class="btn-home">
+                    <i class="fas fa-home"></i> Accueil
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Bandeau succès -->
+    <div class="success-banner">
+        <i class="fas fa-check-circle"></i>
+        <p>Réservation enregistrée avec succès !</p>
+    </div>
+
+    <!-- TICKET DE CONFIRMATION -->
+    <section class="ticket-section">
+        <div class="container">
+            <div class="ticket-wrapper">
+                <div class="ticket">
+
+                    <div class="ticket-header">
+                        <div class="icon-check"><i class="fas fa-ticket-alt"></i></div>
+                        <h2>Réservation Confirmée</h2>
+                        <p>Votre demande de réservation a bien été enregistrée.</p>
+                    </div>
+
+                    <div class="ticket-details">
+                        <div class="ticket-info">
+                            <span class="ticket-label">Nom</span>
+                            <span class="ticket-value" id="ticketNom">—</span>
+                        </div>
+                        <div class="ticket-info">
+                            <span class="ticket-label">Prénoms</span>
+                            <span class="ticket-value" id="ticketPrenoms">—</span>
+                        </div>
+                        <div class="ticket-info">
+                            <span class="ticket-label">Date de Visite</span>
+                            <span class="ticket-value" id="ticketDate">—</span>
+                        </div>
+                        <div class="ticket-info">
+                            <span class="ticket-label">Téléphone</span>
+                            <span class="ticket-value" id="ticketPhone">—</span>
+                        </div>
+                        <div class="ticket-info">
+                            <span class="ticket-label">Ville</span>
+                            <span class="ticket-value" id="ticketCity">—</span>
+                        </div>
+                        <div class="ticket-info">
+                            <span class="ticket-label">Quartier</span>
+                            <span class="ticket-value" id="ticketArea">—</span>
+                        </div>
+                        <div class="ticket-info" style="grid-column: 1 / -1; border-left-color: var(--accent-color);">
+                            <span class="ticket-label">Montant à payer</span>
+                            <span class="ticket-value" id="ticketAmount" style="color: var(--accent-color); font-size: 18px;">—</span>
+                        </div>
+                    </div>
+
+                    <!-- Code de réservation -->
+                    <div class="ticket-code-container">
+                        <p>Votre code de réservation</p>
+                        <div class="ticket-code" id="ticketCode">HIST-0000</div>
+                        <small><i class="fas fa-info-circle"></i> Présentez ce code lors du paiement</small>
+                    </div>
+
+                    <!-- Instructions paiement -->
+                    <div class="ticket-instructions">
+                        <h4><i class="fas fa-credit-card"></i> Instructions de Paiement</h4>
+                        <p>1. <strong>Effectuez un transfert Mobile Money :</strong></p>
+                        <ul>
+                            <li><strong>CELTIS :</strong> 01 47 02 88 23</li>
+                            <li><strong>MOOV :</strong> 01 99 91 09 51</li>
+                        </ul>
+                        <p>2. <strong>Envoyez la preuve de paiement sur WhatsApp :</strong></p>
+                        <a href="#" id="whatsappLink" target="_blank" class="btn btn-whatsapp">
+                            <i class="fab fa-whatsapp"></i> Envoyer la preuve sur WhatsApp
+                        </a>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="ticket-actions">
+                        <button class="btn btn-print" id="printBtn">
+                            <i class="fas fa-print"></i> Voir le Ticket Électronique
+                        </button>
+                        <a href="index.html" class="btn btn-new">
+                            <i class="fas fa-plus-circle"></i> Nouvelle Réservation
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 <strong>Voyage Historique</strong>. Tous droits réservés.</p>
+            <p>Projet collaboratif : AMINOU Andil · INOUSSA Gabriel · MIGAN Issa · SOSSA Caleb</p>
+        </div>
+    </footer>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            /* Récupération des données depuis sessionStorage */
+            var raw = sessionStorage.getItem('reservationData');
+            if (!raw) {
+                /* Aucune donnée → retour à l'accueil */
+                window.location.href = 'index.html';
+                return;
+            }
+            var data = JSON.parse(raw);
+
+            /* Remplissage des champs */
+            document.getElementById('ticketNom').textContent     = data.nom;
+            document.getElementById('ticketPrenoms').textContent = data.prenoms;
+            document.getElementById('ticketDate').textContent    = data.dateFormatee || data.dateVisite;
+            document.getElementById('ticketPhone').textContent   = data.telephone;
+            document.getElementById('ticketCity').textContent    = data.villeEmbarquement;
+            document.getElementById('ticketArea').textContent    = data.quartierResidentiel;
+            document.getElementById('ticketAmount').textContent  = data.montant.toLocaleString('fr-FR') + ' FCFA';
+            document.getElementById('ticketCode').textContent    = data.code;
+
+            /* Lien WhatsApp avec message pré-rempli */
+            var msg = 'Bonjour, je viens de faire ma demande de réservation (Code: ' + data.code + ')\n'
+                    + 'Nom: '      + data.nom              + '\n'
+                    + 'Prénoms: '  + data.prenoms           + '\n'
+                    + 'Date: '     + (data.dateFormatee || data.dateVisite) + '\n'
+                    + 'Téléphone: ' + data.telephone        + '\n'
+                    + 'Ville: '    + data.villeEmbarquement + '\n'
+                    + 'Quartier: ' + data.quartierResidentiel + '\n'
+                    + 'Montant: '  + data.montant.toLocaleString('fr-FR') + ' FCFA';
+
+            document.getElementById('whatsappLink').href =
+                'https://wa.me/22999910951?text=' + encodeURIComponent(msg);
+
+            /* Bouton "Voir le Ticket Électronique" → redirige vers ticket.html */
+            document.getElementById('printBtn').addEventListener('click', function () {
+                window.location.href = 'ticket.html';
+            });
+        });
+    </script>
+
+</body>
+</html>
