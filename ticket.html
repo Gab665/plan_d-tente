@@ -384,32 +384,77 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération...';
                 btn.disabled  = true;
 
-                setTimeout(function () {
-                    html2canvas(document.getElementById('qrTicket'), {
-                        scale:           2,
-                        backgroundColor: '#ffffff',
-                        allowTaint:      true,
-                        useCORS:         true,
-                        logging:         false
-                    }).then(function (canvas) {
-                        var jsPDF  = window.jspdf.jsPDF;
-                        var pdf    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-                        var imgData = canvas.toDataURL('image/jpeg', 0.92);
-                        var pw     = pdf.internal.pageSize.getWidth();
-                        var ph     = pdf.internal.pageSize.getHeight();
-                        var ratio  = Math.min(pw / canvas.width, ph / canvas.height);
-                        var w      = canvas.width  * ratio;
-                        var h      = canvas.height * ratio;
-                        pdf.addImage(imgData, 'JPEG', (pw - w) / 2, (ph - h) / 2, w, h);
-                        pdf.save('MomentDetente-' + data.code + '.pdf');
-                        btn.innerHTML = orig;
-                        btn.disabled  = false;
-                    }).catch(function () {
-                        alert('Erreur lors de la génération du PDF.');
-                        btn.innerHTML = orig;
-                        btn.disabled  = false;
-                    });
-                }, 500);
+setTimeout(function () {
+    var ticket  = document.getElementById('qrTicket');
+
+    // Clone hors-écran sans animations ni transparences
+    var clone   = ticket.cloneNode(true);
+    clone.style.cssText = [
+        'position:fixed', 'top:-9999px', 'left:-9999px',
+        'width:' + ticket.offsetWidth + 'px',
+        'background:#ffffff',
+        'animation:none', 'opacity:1', 'transform:none',
+        'box-shadow:none', 'border-top:10px solid #ff6f00',
+        'padding:30px', 'overflow:visible', 'z-index:-1'
+    ].join(';');
+
+    clone.querySelectorAll('*').forEach(function (el) {
+        el.style.animation  = 'none';
+        el.style.transition = 'none';
+        el.style.opacity    = '1';
+        el.style.transform  = 'none';
+    });
+
+    document.body.appendChild(clone);
+
+    html2canvas(clone, {
+        scale:           4,           // était 2 → 4× plus net
+        backgroundColor: '#ffffff',
+        allowTaint:      true,
+        useCORS:         true,
+        logging:         false,
+        imageTimeout:    15000
+    }).then(function (canvas) {
+        document.body.removeChild(clone);
+
+        var jsPDF    = window.jspdf.jsPDF;
+        var pdf      = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+        // Calcul dimensions réelles (scale=4 → ÷4 pour retrouver px réels)
+        var marginMm    = 10;
+        var maxWmm      = 190;
+        var contentWmm  = (canvas.width  / 4) * (25.4 / 96);
+        var contentHmm  = (canvas.height / 4) * (25.4 / 96);
+        var finalWmm, finalHmm;
+
+        if (contentWmm > maxWmm) {
+            var r    = maxWmm / contentWmm;
+            finalWmm = maxWmm;
+            finalHmm = contentHmm * r;
+        } else {
+            finalWmm = contentWmm;
+            finalHmm = contentHmm;
+        }
+
+        var pw      = pdf.internal.pageSize.getWidth();
+        var xOff    = (pw - finalWmm) / 2;
+
+        // PNG sans compression = couleurs fidèles, zéro flou
+        var imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', xOff, marginMm, finalWmm, finalHmm, undefined, 'NONE');
+
+        pdf.save('MomentDetente-' + data.code + '.pdf');
+        btn.innerHTML = orig;
+        btn.disabled  = false;
+
+    }).catch(function () {
+        document.body.removeChild(clone);
+        alert('Erreur lors de la génération du PDF.');
+        btn.innerHTML = orig;
+        btn.disabled  = false;
+    });
+
+}, 800);  // 800ms au lieu de 500 pour laisser le DOM se stabiliser
             });
 
             /* ── Lien WhatsApp ── */
